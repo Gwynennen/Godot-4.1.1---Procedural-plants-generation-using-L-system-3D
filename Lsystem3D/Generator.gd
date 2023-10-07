@@ -1,7 +1,7 @@
 extends Node3D
 
 var drawble = "F"
-var actions = "-+[]|#!{}.<>&^/\\()`"
+var actions = "-+[]|#!{}.<>&^/\\()`:"
 var rules
 var starting
 var current
@@ -9,7 +9,7 @@ var TW
 
 func _ready():
 	randomize()
-	start("Tree1", 3)
+	start("Tree1", 5)
 
 func start(preset_name: String, steps):
 	TW = create_tween()
@@ -58,7 +58,7 @@ func calculate_state(steps):
 		current.state = tmp
 
 func create_parts():
-	var checkpoint = {"parentJoint": [], "rota": [], "length": []}
+	var checkpoint = {"parentJoint": [], "rota": [], "length": [], "width": []}
 	for part in current.state:
 		if part in drawble:
 			make_part()
@@ -84,6 +84,8 @@ func create_parts():
 #				scale
 				"`":
 					current.length *= current.lengthMulti
+				":":
+					current.width *= current.widthMulti
 					
 				_:
 					push_error("unknown symbol")
@@ -91,6 +93,7 @@ func create_parts():
 func make_part():
 	var jointStart = Marker3D.new()
 	jointStart.rotation += current.rota
+	current.rota = Vector3.ZERO
 	current.parentJoint.add_child(jointStart)
 	current.parentJoint = jointStart
 	
@@ -104,20 +107,19 @@ func make_animated_mesh(sidesCount):
 	var endPos = Vector3(0,current.length,0)
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-
-#	st.add_vertex(Vector3.ZERO)
-#	st.add_vertex(endPos)
+	
+#	create tube shape
 	var angle = ((PI*2) / sidesCount)
 	for i in sidesCount+1:
 #		tube point top
 		st.add_vertex(Vector3(current.width*cos(angle*i), endPos.y, current.width*sin(angle*i)))
 # 		tube point base
 		st.add_vertex(Vector3(current.width*cos(angle*i), 0, current.width*sin(angle*i)))
-	
+
 	var tube = MeshInstance3D.new()
 	tube.set_mesh(st.commit())
 	tube.scale = Vector3.ZERO
-	TW.tween_property(tube, "scale", Vector3.ONE, 0.1)
+	TW.tween_property(tube, "scale", Vector3.ONE, 0.05)
 	
 	current.parentJoint.add_child(tube)
 	return endPos
