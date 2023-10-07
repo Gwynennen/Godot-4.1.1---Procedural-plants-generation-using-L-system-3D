@@ -1,7 +1,7 @@
 extends Node3D
 
 var drawble = "F"
-var actions = "-+[]|#!{}.<>&^/\\()`:"
+var actions = "-+[]|#!{}.<>&^/\\()`:RL"
 var rules
 var starting
 var current
@@ -9,7 +9,7 @@ var TW
 
 func _ready():
 	randomize()
-	start("Tree1", 5)
+	start("Tree1", 4)
 
 func start(preset_name: String, steps):
 	TW = create_tween()
@@ -22,6 +22,7 @@ func set_current_state():
 	current = starting.duplicate(true)
 	current.rota = Vector3.ZERO
 	current.parentJoint = self
+	current.color = Color.SADDLE_BROWN.darkened(0.8)
 
 func load_settings(presetName: String):
 	var preset_data = {}
@@ -58,10 +59,11 @@ func calculate_state(steps):
 		current.state = tmp
 
 func create_parts():
-	var checkpoint = {"parentJoint": [], "rota": [], "length": [], "width": []}
+	var checkpoint = {"parentJoint": [], "rota": [], "length": [], "width": [], "color": []}
 	for part in current.state:
 		if part in drawble:
 			make_part()
+			current.color = current.color.lightened(0.01)
 		elif part in actions:
 			match part:
 #				handle stack
@@ -86,7 +88,12 @@ func create_parts():
 					current.length *= current.lengthMulti
 				":":
 					current.width *= current.widthMulti
-					
+				
+#				additions
+				"R":
+					make_apple()
+				"L":
+					make_leaves()
 				_:
 					push_error("unknown symbol")
 
@@ -98,12 +105,47 @@ func make_part():
 	current.parentJoint = jointStart
 	
 	var jointEnd = Marker3D.new()
-	jointEnd.position = make_animated_mesh(8)
+	jointEnd.position = make_branch(8)
 	current.parentJoint.add_child(jointEnd)
 	current.parentJoint = jointEnd
-		
 
-func make_animated_mesh(sidesCount):
+func make_apple():
+	var holder = Marker3D.new()
+	holder.rotation.x = -PI/4
+	var apple = MeshInstance3D.new()
+	apple.mesh = SphereMesh.new()
+	apple.mesh.radius = current.width
+	apple.mesh.height = current.width*2
+	apple.position.y = -current.width*2
+	apple.set_material_override(StandardMaterial3D.new())
+	apple.get_material_override().set_albedo(Color.DARK_RED)
+	apple.get_material_override().set_shading_mode(BaseMaterial3D.SHADING_MODE_UNSHADED)
+	current.parentJoint.add_child(holder)
+	holder.add_child(apple)
+	
+	apple.scale = Vector3.ZERO
+	TW.tween_property(apple, "scale", Vector3.ONE, 0.05)
+
+func make_leaves():
+	for x in randi_range(5, 15):
+		var holder = Marker3D.new()
+		holder.rotation.x = -PI/4
+		holder.rotation.y = deg_to_rad(randi_range(0, 360))
+		var leaf = MeshInstance3D.new()
+		leaf.mesh = SphereMesh.new()
+		leaf.mesh.radius = current.width
+		leaf.mesh.height = 0
+		leaf.position.y = -current.width*randi_range(1, 5)
+		leaf.set_material_override(StandardMaterial3D.new())
+		leaf.get_material_override().set_albedo(Color.WEB_GREEN)
+		leaf.get_material_override().set_shading_mode(BaseMaterial3D.SHADING_MODE_UNSHADED)
+		current.parentJoint.add_child(holder)
+		holder.add_child(leaf)
+		
+		leaf.scale = Vector3.ZERO
+		TW.tween_property(leaf, "scale", Vector3.ONE, 0.05)
+	
+func make_branch(sidesCount):
 	var endPos = Vector3(0,current.length,0)
 	var st = SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
@@ -118,6 +160,10 @@ func make_animated_mesh(sidesCount):
 
 	var tube = MeshInstance3D.new()
 	tube.set_mesh(st.commit())
+	tube.set_material_override(StandardMaterial3D.new())
+	tube.get_material_override().set_albedo(current.color)
+	tube.get_material_override().set_shading_mode(BaseMaterial3D.SHADING_MODE_UNSHADED)
+	
 	tube.scale = Vector3.ZERO
 	TW.tween_property(tube, "scale", Vector3.ONE, 0.05)
 	

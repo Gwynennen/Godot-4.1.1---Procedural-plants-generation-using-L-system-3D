@@ -28,8 +28,8 @@ size = Vector2(10, 10)
 environment = SubResource("Environment_cqa5q")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-0.626484, -0.658456, -0.417078, -0.597928, 0.0627364, 0.799091, -0.5, 0.75, -0.433013, 0, 0, 0)
-shadow_enabled = true
+transform = Transform3D(1, 0, 0, 0, 0.798636, 0.601815, 0, -0.601815, 0.798636, 0, 0, 0)
+sky_mode = 1
 
 [node name="Generator" type="Node3D" parent="."]
 script = ExtResource("1_10i1m")
