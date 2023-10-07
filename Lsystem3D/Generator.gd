@@ -9,7 +9,7 @@ var TW
 
 func _ready():
 	randomize()
-	start("Tree1", 1)
+	start("Tree1", 3)
 
 func start(preset_name: String, steps):
 	TW = create_tween()
@@ -21,7 +21,7 @@ func start(preset_name: String, steps):
 func set_current_state():
 	current = starting.duplicate(true)
 	current.rota = Vector3.ZERO
-	current.parentJoint = self # starting joint being this node
+	current.parentJoint = self
 
 func load_settings(presetName: String):
 	var preset_data = {}
@@ -56,13 +56,12 @@ func calculate_state(steps):
 			else:
 				tmp += part
 		current.state = tmp
-	print(current.state)
 
 func create_parts():
-	var checkpoint = {"parentJoint": [current.parentJoint], "rota": [current.rota], "length": [current.length]}
+	var checkpoint = {"parentJoint": [], "rota": [], "length": []}
 	for part in current.state:
 		if part in drawble:
-			make_part(current.parentJoint)
+			make_part()
 		elif part in actions:
 			match part:
 #				handle stack
@@ -82,7 +81,6 @@ func create_parts():
 					current.rota.y += current.angle
 				"/":
 					current.rota.y -= current.angle
-					
 #				scale
 				"`":
 					current.length *= current.lengthMulti
@@ -90,36 +88,37 @@ func create_parts():
 				_:
 					push_error("unknown symbol")
 
-func make_part(parentJoint):
-	var joint = Marker3D.new()
-	joint.rotation = current.rota
-	joint.position += Vector3(0,current.length,0)
-	joint.add_child(make_animated_mesh())
-	current.parentJoint.add_child(joint)
-	current.parentJoint = joint
+func make_part():
+	var jointStart = Marker3D.new()
+	jointStart.rotation += current.rota
+	current.parentJoint.add_child(jointStart)
+	current.parentJoint = jointStart
+	
+	var jointEnd = Marker3D.new()
+	jointEnd.position = make_animated_mesh(8)
+	current.parentJoint.add_child(jointEnd)
+	current.parentJoint = jointEnd
+		
 
-func make_animated_mesh():
+func make_animated_mesh(sidesCount):
+	var endPos = Vector3(0,current.length,0)
 	var st = SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_LINES)
+	st.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+
+#	st.add_vertex(Vector3.ZERO)
+#	st.add_vertex(endPos)
+	var angle = ((PI*2) / sidesCount)
+	for i in sidesCount+1:
+#		tube point top
+		st.add_vertex(Vector3(current.width*cos(angle*i), endPos.y, current.width*sin(angle*i)))
+# 		tube point base
+		st.add_vertex(Vector3(current.width*cos(angle*i), 0, current.width*sin(angle*i)))
 	
-	st.add_vertex(Vector3(0,0,0))
-	st.add_vertex(Vector3(0,current.length,0))
-	
-	var	tube = MeshInstance3D.new()
+	var tube = MeshInstance3D.new()
 	tube.set_mesh(st.commit())
 	tube.scale = Vector3.ZERO
-	TW.tween_property(tube, "scale", Vector3.ONE, 1)
+	TW.tween_property(tube, "scale", Vector3.ONE, 0.1)
 	
-	return tube
+	current.parentJoint.add_child(tube)
+	return endPos
 
-
-
-#	var angle = ((PI*2) / sidesCount)
-#	for i in sidesCount+1:
-##		circle point top
-#		st.add_vertex(newPos + Vector3(current.width*cos(angle*i), current.pos.y+current.length, current.width*sin(angle*i)))
-#		# circle point base
-#		st.add_vertex(current.pos + Vector3(current.width*cos(angle*i), current.pos.y, current.width*sin(angle*i)))
-	
-	
-	

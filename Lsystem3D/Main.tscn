@@ -34,11 +34,10 @@ shadow_enabled = true
 script = ExtResource("1_10i1m")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.986504, 0.163739, 0, -0.163739, 0.986504, -0.216912, 3.34308, 5.84507)
+transform = Transform3D(-4.37114e-08, -0.48481, 0.87462, 0, 0.87462, 0.48481, -1, 2.11917e-08, -3.82308e-08, 3, 3, 0)
 fov = 85.4776
 script = ExtResource("1_snj51")
 
 [node name="ground" type="MeshInstance3D" parent="."]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 0)
-visible = false
 mesh = SubResource("PlaneMesh_ntqes")
